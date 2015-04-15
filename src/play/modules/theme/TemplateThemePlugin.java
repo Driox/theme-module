@@ -31,7 +31,7 @@ public class TemplateThemePlugin extends PlayPlugin {
 
 	@Override
 	public String getMessage(String locale, Object key, Object... args) {
-		String ctx = getCtx(Request.current());
+		String ctx = getCtx(Request.current()).toUpperCase();
 
 		String newKey = key.toString();
 		if (endWithNull(newKey)) {
@@ -42,12 +42,13 @@ public class TemplateThemePlugin extends PlayPlugin {
 			newKey = new StringBuilder(newKey).append(".").append(ctx).toString();
 		}
 
-		String msg = getMessageFromResourceFile(locale, key, args);
-
+		String msg = getMessageFromResourceFile(locale, newKey, args);
+		
 		if (hasNotFoundMsg(newKey, msg)) {
 			newKey = removeSuffix(newKey);
 			msg = getMessageFromResourceFile(locale, newKey, args);
 		}
+		
 		return msg;
 	}
 
