@@ -1,10 +1,6 @@
 package play.modules.theme;
 
-import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.CACHE_CONTROL;
-import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.ETAG;
-import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.IF_MODIFIED_SINCE;
-import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.IF_NONE_MATCH;
-import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.LAST_MODIFIED;
+import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.*;
 
 import java.io.File;
 import java.text.ParseException;
@@ -13,8 +9,6 @@ import java.util.Date;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.jboss.netty.handler.codec.http.HttpMethod;
-import org.jboss.netty.handler.codec.http.HttpRequest;
-import org.jboss.netty.handler.codec.http.HttpResponse;
 import org.jboss.netty.handler.codec.http.HttpResponseStatus;
 
 import play.Logger;
@@ -37,11 +31,21 @@ public class TemplateThemePlugin extends PlayPlugin {
 
 	@Override
 	public String getMessage(String locale, Object key, Object... args) {
+		String ctx = getCtx(Request.current());
+
+		String newKey = key.toString();
+		if (endWithNull(newKey)) {
+			newKey = removeSuffix(newKey);
+		}
+
+		if (!endWithMaj(newKey)) {
+			newKey = new StringBuilder(newKey).append(".").append(ctx).toString();
+		}
+
 		String msg = getMessageFromResourceFile(locale, key, args);
 
-		if ((msg == null || msg.length() == 0 || msg.equals(key)) && (endWithMaj(key.toString()) || endWithNull(key.toString()))) {
-			String newKey = key.toString();
-			newKey = newKey.substring(0, newKey.lastIndexOf('.'));
+		if (hasNotFoundMsg(newKey, msg)) {
+			newKey = removeSuffix(newKey);
 			msg = getMessageFromResourceFile(locale, newKey, args);
 		}
 		return msg;
@@ -53,6 +57,14 @@ public class TemplateThemePlugin extends PlayPlugin {
 
 	private static boolean endWithNull(String key) {
 		return key.endsWith(".null");
+	}
+
+	private static String removeSuffix(String key) {
+		return key.substring(0, key.lastIndexOf('.'));
+	}
+
+	private static boolean hasNotFoundMsg(String key, String msg) {
+		return msg == null || msg.length() == 0 || msg.equals(key);
 	}
 
 	private static String getMessageFromResourceFile(String locale, Object key, Object... args) {
@@ -214,7 +226,7 @@ public class TemplateThemePlugin extends PlayPlugin {
 			return getFullUrlCtx(domain);
 		}
 	}
-	
+
 	private static String getFullUrlCtx(String domain) {
 		String listString = Play.configuration.getProperty("particeep.ctx.list");
 		String[] list = listString.split(",");
