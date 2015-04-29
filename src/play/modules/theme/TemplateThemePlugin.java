@@ -1,6 +1,10 @@
 package play.modules.theme;
 
-import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.*;
+import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.CACHE_CONTROL;
+import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.ETAG;
+import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.IF_MODIFIED_SINCE;
+import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.IF_NONE_MATCH;
+import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.LAST_MODIFIED;
 
 import java.io.File;
 import java.text.ParseException;
@@ -19,6 +23,7 @@ import play.libs.MimeTypes;
 import play.mvc.Http.Request;
 import play.mvc.Http.Response;
 import play.mvc.Scope;
+import play.mvc.Scope.RenderArgs;
 import play.templates.Template;
 import play.templates.TemplateLoader;
 import play.utils.Utils;
@@ -43,12 +48,12 @@ public class TemplateThemePlugin extends PlayPlugin {
 		}
 
 		String msg = getMessageFromResourceFile(locale, newKey, args);
-		
+
 		if (hasNotFoundMsg(newKey, msg)) {
 			newKey = removeSuffix(newKey);
 			msg = getMessageFromResourceFile(locale, newKey, args);
 		}
-		
+
 		return msg;
 	}
 
@@ -100,6 +105,7 @@ public class TemplateThemePlugin extends PlayPlugin {
 		beenThere.set(Boolean.TRUE);
 		try {
 			String ctx = getCtx(Request.current());
+
 			String filePath = file.getRealFile().getPath();
 			String ctxFilePath = filePath.replaceAll("views", "views/theme/" + ctx);
 
@@ -211,21 +217,58 @@ public class TemplateThemePlugin extends PlayPlugin {
 	}
 
 	private static String getCtx(Request request) {
-		if (request == null)
-			return "";
-
 		Scope.Session session = Scope.Session.current();
 		if (session != null && session.contains(SESSION_OVERRIDE_CONTEXT_NAME)) {
 			return session.get(SESSION_OVERRIDE_CONTEXT_NAME).toLowerCase();
 		}
 
+		String ctx = null;
+		if (ctx == null) {
+			ctx = getCtxFromRenderArgs();
+		}
+
+		if (ctx == null && request != null) {
+			ctx = getCtxFromDomain(request);
+		}
+
+		if (StringUtils.isBlank(ctx)) {
+			ctx = "";
+		}
+
+		return ctx;
+	}
+
+	private static String getCtxFromRenderArgs() {
+		String result = null;
+		RenderArgs renderArg = RenderArgs.current();
+		if (renderArg != null) {
+			Object argCtx = renderArg.get("ctx");
+			if (argCtx != null) {
+				result = argCtx.toString();
+			}
+		}
+
+		return result;
+	}
+
+	private static String getCtxFromDomain(Request request) {
 		String domain = request.domain.toLowerCase();
+		String ctx = null;
 
 		if (domain.endsWith("particeep.com")) {
-			return getPrefixCtx(domain);
+			ctx = getPrefixCtx(domain);
 		} else {
-			return getFullUrlCtx(domain);
+			ctx = getFullUrlCtx(domain);
 		}
+
+		return cleanCtx(ctx);
+	}
+
+	private static String cleanCtx(String ctx) {
+		if (ctx == null)
+			return ctx;
+
+		return ctx.replaceAll("-", "").replaceAll("_", "");
 	}
 
 	private static String getFullUrlCtx(String domain) {
