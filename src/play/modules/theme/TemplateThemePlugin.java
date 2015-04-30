@@ -227,7 +227,7 @@ public class TemplateThemePlugin extends PlayPlugin {
 			ctx = getCtxFromRenderArgs();
 		}
 
-		if (ctx == null && request != null) {
+		if ((StringUtils.isBlank(ctx) || ctx.toLowerCase() == "particeep") && request != null) {
 			ctx = getCtxFromDomain(request);
 		}
 
@@ -235,7 +235,7 @@ public class TemplateThemePlugin extends PlayPlugin {
 			ctx = "";
 		}
 
-		return ctx;
+		return ctx.toLowerCase();
 	}
 
 	private static String getCtxFromRenderArgs() {
