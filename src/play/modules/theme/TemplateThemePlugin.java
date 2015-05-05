@@ -224,11 +224,11 @@ public class TemplateThemePlugin extends PlayPlugin {
 
 		String ctx = null;
 		if (ctx == null) {
-			ctx = getCtxFromRenderArgs();
+			ctx = getCtxFromDomain(request);
 		}
 
-		if ((StringUtils.isBlank(ctx) || ctx.toLowerCase() == "particeep") && request != null) {
-			ctx = getCtxFromDomain(request);
+		if ((StringUtils.isBlank(ctx) || ctx.toLowerCase() == "particeep" || ctx.toLowerCase() == "local" || ctx.toLowerCase() == "www") && request != null) {
+			ctx = getCtxFromRenderArgs();
 		}
 
 		if (StringUtils.isBlank(ctx)) {
