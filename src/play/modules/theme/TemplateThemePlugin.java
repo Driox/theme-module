@@ -252,13 +252,16 @@ public class TemplateThemePlugin extends PlayPlugin {
 	}
 
 	private static String getCtxFromDomain(Request request) {
-		String domain = request.domain.toLowerCase();
 		String ctx = null;
 
-		if (domain.endsWith("particeep.com")) {
-			ctx = getPrefixCtx(domain);
-		} else {
-			ctx = getFullUrlCtx(domain);
+		if (request != null) {
+			String domain = request.domain.toLowerCase();
+
+			if (domain.endsWith("particeep.com")) {
+				ctx = getPrefixCtx(domain);
+			} else {
+				ctx = getFullUrlCtx(domain);
+			}
 		}
 
 		return cleanCtx(ctx);
