@@ -9,6 +9,8 @@ import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.LAST_MODIFIED
 import java.io.File;
 import java.text.ParseException;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
@@ -33,6 +35,7 @@ public class TemplateThemePlugin extends PlayPlugin {
 
 	private static final ThreadLocal<Boolean> beenThere = new ThreadLocal<Boolean>();
 	private final static String SESSION_OVERRIDE_CONTEXT_NAME = "OVERRIDE_CONTEXT_NAME";
+	private static final Map<String, String> URL_TO_CTX_MAP = buildCtxMap();
 
 	@Override
 	public String getMessage(String locale, Object key, Object... args) {
@@ -275,6 +278,11 @@ public class TemplateThemePlugin extends PlayPlugin {
 	}
 
 	private static String getFullUrlCtx(String domain) {
+		String result = URL_TO_CTX_MAP.get(domain);
+		if (result != null && result.length() > 0) {
+			return result;
+		}
+
 		String listString = Play.configuration.getProperty("particeep.ctx.list");
 		String[] list = listString.split(",");
 
@@ -286,6 +294,25 @@ public class TemplateThemePlugin extends PlayPlugin {
 		}
 
 		return "";
+	}
+
+	private static Map<String, String> buildCtxMap() {
+		Map<String, String> result = new HashMap<String, String>();
+
+		String listString = Play.configuration.getProperty("particeep.ctx.list");
+		String[] list = listString.split(",");
+
+		for (String ctx : list) {
+			String domains = Play.configuration.getProperty("particeep.ctx." + ctx);
+			String[] domainArray = domains.split(",");
+
+			for (String domain : domainArray) {
+				Logger.info("Add to ctx map : %s - %s", domain, ctx);
+				result.put(domain, ctx);
+			}
+		}
+
+		return result;
 	}
 
 	private static String getPrefixCtx(String domain) {
