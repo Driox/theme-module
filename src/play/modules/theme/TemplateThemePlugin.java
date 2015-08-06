@@ -320,7 +320,7 @@ public class TemplateThemePlugin extends PlayPlugin {
 			domain = domain.substring(0, domain.indexOf('.'));
 		}
 
-		if (domain.startsWith("test-")) {
+		if (domain.startsWith("test-") || domain.startsWith("demo-")) {
 			domain = domain.substring(5);
 		}
 
