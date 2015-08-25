@@ -73,6 +73,7 @@ public class TemplateThemePlugin extends PlayPlugin {
 	}
 
 	private static boolean hasNotFoundMsg(String key, String msg) {
+		key = key.replaceAll("%%", "%");
 		return msg == null || msg.length() == 0 || msg.equals(key);
 	}
 
