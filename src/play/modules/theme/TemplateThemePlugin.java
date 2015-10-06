@@ -56,7 +56,9 @@ public class TemplateThemePlugin extends PlayPlugin {
 			newKey = removeSuffix(newKey);
 			msg = getMessageFromResourceFile(locale, newKey, args);
 		}
-
+		if (hasNotFoundMsg(newKey, msg)) {
+			return "error.messages-tr:" + msg;
+		}
 		return msg;
 	}
 
