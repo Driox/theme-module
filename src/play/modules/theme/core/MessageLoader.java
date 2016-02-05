@@ -21,6 +21,10 @@ public class MessageLoader {
 			msg = getMessageFromResourceFile(locale, newKey, args);
 		}
 
+		if (play.Play.runingInTestMode() && !newKey.isEmpty() && hasNotFoundMsg(newKey, msg)) {
+			return "error.messages-tr:" + key;
+		}
+
 		return msg;
 	}
 
