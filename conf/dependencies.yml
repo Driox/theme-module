@@ -1,4 +1,4 @@
-self: play -> ThemeModule 1.9.6
+self: play -> ThemeModule 1.10.1
 
 require:
     - play 1.2.7
