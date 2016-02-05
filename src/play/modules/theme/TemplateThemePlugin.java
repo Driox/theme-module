@@ -20,12 +20,13 @@ import org.jboss.netty.handler.codec.http.HttpResponseStatus;
 import play.Logger;
 import play.Play;
 import play.PlayPlugin;
-import play.i18n.Messages;
 import play.libs.MimeTypes;
+import play.modules.theme.core.MessageLoader;
+import play.modules.theme.editmode.EditMode;
+import play.modules.theme.utils.ModuleUtils;
 import play.mvc.Http.Request;
 import play.mvc.Http.Response;
 import play.mvc.Scope;
-import play.mvc.Scope.RenderArgs;
 import play.templates.Template;
 import play.templates.TemplateLoader;
 import play.utils.Utils;
@@ -41,60 +42,11 @@ public class TemplateThemePlugin extends PlayPlugin {
 	public String getMessage(String locale, Object key, Object... args) {
 		String ctx = getCtx(Request.current()).toUpperCase();
 
-		String newKey = key.toString();
-		if (endWithNull(newKey)) {
-			newKey = removeSuffix(newKey);
+		if (EditMode.isEnable()) {
+			return EditMode.formatMsgForEdition(ctx, locale, key, args);
+		} else {
+			return MessageLoader.getMessageByContext(ctx, locale, key, args);
 		}
-
-		if (!endWithMaj(newKey)) {
-			newKey = new StringBuilder(newKey).append(".").append(ctx).toString();
-		}
-
-		String msg = getMessageFromResourceFile(locale, newKey, args);
-
-		if (hasNotFoundMsg(newKey, msg)) {
-			newKey = removeSuffix(newKey);
-			msg = getMessageFromResourceFile(locale, newKey, args);
-		}
-		if (play.Play.runingInTestMode() && !newKey.isEmpty() && hasNotFoundMsg(newKey, msg)) {
-			return "error.messages-tr:" + key;
-		}
-		return msg;
-	}
-
-	private static boolean endWithMaj(String key) {
-		return key.matches(".*\\.[A-Z0-9_]+$");
-	}
-
-	private static boolean endWithNull(String key) {
-		return key.endsWith(".null");
-	}
-
-	private static String removeSuffix(String key) {
-		return key.substring(0, key.lastIndexOf('.'));
-	}
-
-	private static boolean hasNotFoundMsg(String key, String msg) {
-		key = key.replaceAll("%%", "%");
-		return msg == null || msg.length() == 0 || msg.equals(key);
-	}
-
-	private static String getMessageFromResourceFile(String locale, Object key, Object... args) {
-		String value = null;
-		if (key == null) {
-			return "";
-		}
-		if (Messages.locales.containsKey(locale)) {
-			value = Messages.locales.get(locale).getProperty(key.toString());
-		}
-		if (value == null) {
-			value = Messages.defaults.getProperty(key.toString());
-		}
-		if (value == null) {
-			value = key.toString();
-		}
-
-		return Messages.formatString(value, args);
 	}
 
 	@Override
@@ -245,16 +197,7 @@ public class TemplateThemePlugin extends PlayPlugin {
 	}
 
 	private static String getCtxFromRenderArgs() {
-		String result = null;
-		RenderArgs renderArg = RenderArgs.current();
-		if (renderArg != null) {
-			Object argCtx = renderArg.get("ctx");
-			if (argCtx != null) {
-				result = argCtx.toString();
-			}
-		}
-
-		return result;
+		return ModuleUtils.getStringFromRenderArg("ctx");
 	}
 
 	private static String getCtxFromDomain(Request request) {
