@@ -8,6 +8,7 @@ public class EditMode {
 	private final static boolean IS_ACTIVE = isActive();
 
 	private static final String template = buildTemplate();
+	private static final String[] escaped_keys = Play.configuration.getProperty("editmod.escape", "placeholder,meta,alt").split(",");
 
 	public static boolean isEnable() {
 		return IS_ACTIVE && isEditModeEnable();
@@ -15,7 +16,7 @@ public class EditMode {
 
 	public static String formatMsgForEdition(String ctx, String locale, Object key, Object... args) {
 		if (isAllowedToChangeKey(key)) {
-			return template.replaceAll("%key%", key.toString()).replaceAll("%msg%", MessageLoader.getMessageByContext(ctx, locale, key, args));
+			return template.replaceAll("%key%", key.toString()).replaceAll("%msg%", MessageLoader.getBaseMessage(ctx, locale, key));
 		} else {
 			return MessageLoader.getMessageByContext(ctx, locale, key, args);
 		}
@@ -27,10 +28,18 @@ public class EditMode {
 	}
 
 	private static boolean isAllowedToChangeKey(Object key) {
-		return key != null
-				&& !key.toString().contains("placeholder")
-				&& !key.toString().contains("meta.")
-				&& !key.toString().contains("alt");
+		if (key == null || key.toString().length() == 0) {
+			return false;
+		}
+
+		String keyString = key.toString();
+		for (String s : escaped_keys) {
+			if (keyString.contains(s)) {
+				return false;
+			}
+		}
+
+		return true;
 	}
 
 	private static boolean isEditModeEnable() {

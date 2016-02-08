@@ -28,6 +28,29 @@ public class MessageLoader {
 		return msg;
 	}
 
+	/**
+	 * Le message basique sans transformation des %s et autre. Utile pour l'édition
+	 */
+	public static String getBaseMessage(String ctx, String locale, Object key) {
+		String newKey = key.toString();
+		if (endWithNull(newKey)) {
+			newKey = removeSuffix(newKey);
+		}
+
+		if (!endWithMaj(newKey)) {
+			newKey = new StringBuilder(newKey).append(".").append(ctx).toString();
+		}
+
+		String msg = findInResourceFile(locale, newKey);
+
+		if (hasNotFoundMsg(newKey, msg)) {
+			newKey = removeSuffix(newKey);
+			msg = findInResourceFile(locale, newKey);
+		}
+
+		return msg;
+	}
+
 	private static boolean endWithMaj(String key) {
 		return key.matches(".*\\.[A-Z0-9_]+$");
 	}
@@ -46,6 +69,11 @@ public class MessageLoader {
 	}
 
 	private static String getMessageFromResourceFile(String locale, Object key, Object... args) {
+		String value = findInResourceFile(locale, key);
+		return Messages.formatString(value, args);
+	}
+
+	private static String findInResourceFile(String locale, Object key) {
 		String value = null;
 		if (key == null) {
 			return "";
@@ -60,7 +88,7 @@ public class MessageLoader {
 			value = key.toString();
 		}
 
-		return Messages.formatString(value, args);
+		return value;
 	}
 
 }
