@@ -1,5 +1,7 @@
 package play.modules.theme.editmode;
 
+import java.util.regex.Matcher;
+
 import play.Play;
 import play.modules.theme.core.MessageLoader;
 import play.modules.theme.utils.ModuleUtils;
@@ -16,7 +18,9 @@ public class EditMode {
 
 	public static String formatMsgForEdition(String ctx, String locale, Object key, Object... args) {
 		if (isAllowedToChangeKey(key)) {
-			return template.replaceAll("%key%", key.toString()).replaceAll("%msg%", MessageLoader.getBaseMessage(ctx, locale, key));
+			return template
+					.replaceAll("%key%", key.toString())
+					.replaceAll("%msg%", Matcher.quoteReplacement(MessageLoader.getBaseMessage(ctx, locale, key)));
 		} else {
 			return MessageLoader.getMessageByContext(ctx, locale, key, args);
 		}
